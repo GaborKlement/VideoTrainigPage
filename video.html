@@ -1,0 +1,121 @@
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+
+<div class="container m-2 pt-3">
+
+    <video width="720" id="video" style="cursor: pointer">
+        <source type="video/mp4" src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"></source>
+    </video>
+
+    <table class="table my-2" style="max-width: 350px;">
+        <tr>
+            <td class="border-0 p-0">Status:</td>
+            <td id="status" class="border-0 p-0 text-right text-uppercase font-weight-bold text-danger">incomplete</td>
+        </tr>
+        <tr>
+            <td class="border-0 p-0">Duration:</td>
+            <td id="duration" class="border-0 p-0 text-right"></td>
+        </tr>
+        <tr>
+            <td class="border-0 p-0">Current Position:</td>
+            <td id="played" class="border-0 p-0 text-right"></td>
+        </tr>
+    </table>
+
+    <a id="next" href="javascript:" class="btn btn-sm btn-primary d-none">Let's go!</a>
+
+</div>
+                        
+<script>
+
+    function setCookie(cookieName, cookieValue, expdays) {
+        var d = new Date();
+        d.setTime(d.getTime() + (expdays * 24 * 60 * 60 * 1000));
+        var expires = "; expires=" + d.toUTCString();
+        document.cookie = cookieName + "=" + cookieValue + expires;
+    }
+    
+    function getCookie(cookieName) {
+        var name = cookieName + "=";
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) === ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(name) === 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return undefined;
+    }    
+    
+    document.addEventListener('contextmenu', event => event.preventDefault());
+
+    var video = document.getElementById("video");
+    video.onclick = function() { if (video.paused) { video.play(); } else { video.pause(); } };
+                                
+    var timeStarted = 0, timePlayed = 0, duration = 0;
+                                
+    if(video.readyState > 0) { getDuration.call(video); } else { video.addEventListener('loadedmetadata', getDuration); }
+                            
+    function getDuration() {
+        duration = video.duration;
+        var minutes = Math.floor(duration / 60);
+        minutes = minutes.toFixed(0);
+        if (minutes < 10) { minutes = '0'+minutes; }
+        var seconds = duration - (minutes * 60);
+        seconds = seconds.toFixed(0);
+        if (seconds < 10) { seconds = '0'+seconds; }
+        document.getElementById("duration").innerHTML = minutes+':'+seconds;
+    }
+    
+    function videoStartedPlaying() { timeStarted = new Date().getTime()/1000; }
+                                
+    function videoStoppedPlaying(event) {
+        setCookie('myVideo.currentTime', video.currentTime, 30);
+        timePlayed = video.currentTime;
+        var minutes = Math.floor(timePlayed / 60); 
+        minutes = minutes.toFixed(0);
+        if (minutes < 10) { minutes = '0'+minutes; }
+        var seconds = timePlayed - (minutes * 60);
+        seconds = seconds.toFixed(0);
+        if (seconds < 10) { seconds = '0'+seconds; }
+        document.getElementById("played").innerHTML = minutes+':'+seconds;
+        if (timePlayed >= duration && event.type == "ended") {
+            document.getElementById("status").classList.remove("text-danger");
+            document.getElementById("status").classList.add("text-success");
+            document.getElementById("status").innerHTML = "vollständig";
+            document.getElementById("next").classList.remove("d-none");
+        }
+    }
+    
+    video.addEventListener("play", videoStartedPlaying);
+    video.addEventListener("playing", videoStartedPlaying);
+    video.addEventListener("ended", videoStoppedPlaying);
+    video.addEventListener("pause", videoStoppedPlaying);
+
+    if (getCookie('myVideo.currentTime') != undefined) {
+        video.currentTime = getCookie('myVideo.currentTime');
+        var position = video.currentTime.toFixed(0);
+        var minutes = Math.floor(position / 60); 
+        minutes = minutes.toFixed(0);
+        if (minutes < 10) { minutes = '0'+minutes; }
+        var seconds = position - (minutes * 60);
+        seconds = seconds.toFixed(0);
+        if (seconds < 10) { seconds = '0'+seconds; }
+        document.getElementById("played").innerHTML = minutes+':'+seconds;
+    }
+    
+    setInterval(function(){
+        setCookie('myVideo.currentTime', video.currentTime, 30);
+        var position = video.currentTime.toFixed(0);
+        var minutes = Math.floor(position / 60); 
+        minutes = minutes.toFixed(0);
+        if (minutes < 10) { minutes = '0'+minutes; }
+        var seconds = position - (minutes * 60);
+        seconds = seconds.toFixed(0);
+        if (seconds < 10) { seconds = '0'+seconds; }
+        document.getElementById("played").innerHTML = minutes+':'+seconds;
+    }, 100);
+                                
+</script>   
